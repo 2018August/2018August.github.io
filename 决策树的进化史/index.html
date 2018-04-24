@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="决策树的进化史"><meta name="keywords" content="机器学习,评估指标"><meta name="author" content="August,undefined"><meta name="copyright" content="August"><title>决策树的进化史 | 机器学习随笔</title><link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.3"><link rel="dns-prefetch" href="https://cdn.staticfile.org"><link rel="dns-prefetch" href="https://cdn.bootcss.com"><link rel="dns-prefetch" href="https://creativecommons.org"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  localSearch: undefined
+} </script></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar"><div class="toggle-sidebar-info text-center"><span data-toggle="切换文章详情">切换站点概览</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-简介"><span class="toc-number">1.</span> <span class="toc-text">1. 简介</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-ID3"><span class="toc-number">2.</span> <span class="toc-text">2. ID3</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-C4-5"><span class="toc-number">3.</span> <span class="toc-text">3. C4.5</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-CART"><span class="toc-number">4.</span> <span class="toc-text">4. CART</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-决策树小结"><span class="toc-number">5.</span> <span class="toc-text">5. 决策树小结</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#6-怎样运用决策树"><span class="toc-number">6.</span> <span class="toc-text">6. 怎样运用决策树</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="http://p7l96nurm.bkt.clouddn.com/blog/180423/kC2iKEe0K1.jpg"></div><div class="author-info__name text-center">August</div><div class="author-info__description text-center"></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">文章</span><span class="pull-right">3</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">标签</span><span class="pull-right">3</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">分类</span><span class="pull-right">1</span></a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(http://p7l96nurm.bkt.clouddn.com/blog/180424/llc3hgkLIF.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">机器学习随笔</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus"><a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a></span></div><div id="post-info"><div id="post-title">决策树的进化史</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2018-04-24</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/machine-learning/">machine learning</a><span class="post-meta__separator">|</span><i class="fa fa-comment-o post-meta__icon" aria-hidden="true"></i><a href="/决策树的进化史/#disqus_thread"><span class="disqus-comment-count" data-disqus-identifier="决策树的进化史/"></span></a><div class="post-meta-wordcount"><span>字数总计: </span><span class="word-count">5,347</span><span class="post-meta__separator">|</span><span>阅读时长: 17 分钟</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div id="post-content"><p>决策树是我们最常见的机器学习算法，和网上的博客和教材都介绍了决策树的不同，本文以“分而治之”的思想介绍了决策树的来源，包括ID3，C4.5 和 CART树，分别讲解了这些算法的原理，几何意义和物理意义，让大家更加清楚三种决策树短发的本质和由来。里面有一些自己的观点和体会，如有不当，请大家指正。</p>
+<a id="more"></a>
+<h1 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h1><p>决策树是一种基本的<strong>分类和回归</strong>方法。和我们之前学过的逻辑斯特回归，线性回归等算法不同，他们要么只能做回归要么只能做分类，而决策树既可以做分类也可以做回归。</p>
+<p><strong>物理含义：</strong>表示定义在特征空间上的条件概率分布，也就是把 $P(y)$ 转化为 $P(y|X)$ 。同时也可以理解为 if-then 规则的集合。如下图左图所示。</p>
+<p><strong>几何含义：</strong> “分而治之”的思想，即把特征空间划分为一系列的矩形区域，然后再每一个区域拟合一个简单的模型。如下图右图所示。本文将用决策树的几何含义对决策树进行讲解。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/HlDLCKKlj9.png?imageslim" alt="mark"></p>
+<p>类比：中国的省市县的划分，公司部门科室的划分。</p>
+<p><strong>步骤：</strong>特征选择，决策树的生成和决策树的修剪。特征选择在于选取对训练数据具有分类能力的特征，这样可以提高决策树的学习效率。决策树生成对应于提高决策树在训练集上的性能，减小模型的bias。决策树的修剪对应于提高模型在验证集上性能，减小模型的 variance，提高模型的泛化能力。</p>
+<p>输入的是 m 个样本，样本输出集合为 D，每个样本有 n 个离散特征，特征集合即为 A，输出为决策树 T，特征选择标准为 Criterion。</p>
+<p>1) 初始化 Criterion 的阈值 $ϵ$ 。</p>
+<p>2) 判断样本是否为同一类输出 $D_i$，如果是则返回单节点树T。标记类别为 $D_i$</p>
+<p>3) 判断特征是否为空，如果是则返回单节点树 T，标记类别为样本中输出类别 D 实例数最多的类别。</p>
+<p>4) 计算 A 中的各个特征（一共 n 个）对输出 D 的 Criterion ，选择 Criterion 值最大的特征 $A_g$</p>
+<p>5) 如果 $A_g$ 的 Criterion 值小于阈值 $ϵ$，则返回单节点树 T，标记类别为样本中输出类别 D 实例数最多的类别。</p>
+<p>6) 否则，按特征 $A_g$ 的不同取值 $A_{gi}$ 将对应的样本输出 D 分成不同的类别 $D_i$。每个类别产生一个子节点。对应特征值为 $A_{gi}$。返回增加了节点的数 T。</p>
+<p>7) 对于所有的子节点，令 $D=D_i，A=A−{A_g}$ 递归调用 2-6 步，得到子树 $T_i$ 并返回。</p>
+<p>省市县镇村市按照空间地理位置进行划分，部门科室是按照职能进行划分，那么按照什么对空间进行划分呢？ Quinlan 在 1986 年提出的 ID3 算法和1993年提出的 C4.5 算法，以及 Breiman 等人在1984年提出的 CART 算法。下面我们对这些算法进行一一介绍。</p>
+<h1 id="2-ID3"><a href="#2-ID3" class="headerlink" title="2. ID3"></a>2. ID3</h1><p><strong>特征选择：信息增益</strong></p>
+<p>首先，我们需要熟悉信息论中熵的概念。熵度量了事物的不确定性，越不确定的事物，它的熵就越大。随机变量 X 熵的表达式如下：</p>
+<script type="math/tex; mode=display">
+Ent(D)= -\sum\limits_{i=1}^{n}p_i \ log \ p_i</script><p>其中 $p_i = P(X = x_i), i =1,2,\cdots, n,$  $log$ 以 2 或者 e 为底。若 $p_i=0$ ，则定义 $0log  0 =0$ 。</p>
+<p><strong><em>Q1：与逻辑回归的代价函数之间有什么关系？</em></strong></p>
+<p>当为二分类问题时，熵可以写成：$Ent(D) = -p log  p - (1-p)log(1-p)$</p>
+<p>逻辑回归的代价函数为：$J(y, \hat y) = -ylog(\hat y) - (1-y)log(1-\hat y)$</p>
+<p>显然两者形式非常相似，逻辑回归的代价函数又称为交叉熵。</p>
+<p><strong><em>Q2：计算以下 3种情况的熵，从中得出什么结论？</em></strong></p>
+<ul>
+<li><p>X 有 2 个可能的取值，而这两个取值的概率各为 1/2 时 。</p>
+<p> $Ent(D) = -(\frac{1}{2}log\frac{1}{2} + \frac{1}{2}log\frac{1}{2}) = log2$ ，此时 X 具有最大的不确定性。</p>
+</li>
+<li><p>X 有 2 个可能的取值，一个概率 1/3，一个概率 2/3。</p>
+<p> $Ent(D) = -(\frac{1}{3}log\frac{1}{3} + \frac{2}{3}log\frac{2}{3}) = log3 - \frac{2}{3}log2 &lt; log2)$ </p>
+</li>
+<li><p>X 有 2 个可能的取值，一个值概率为 0，另一个值概率为 1。</p>
+<p> $Ent(D) = -(1log1 +0log0) = 0$ </p>
+<p> 熵随 p 的变化规律为：</p>
+<p> <img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/f6h3JkIDl6.png?imageslim" width="30%"></p>
+</li>
+</ul>
+<p>熵越大，随机变量的不确定性越大，且熵的范围为 $0\le Ent(D) \le log n$ 。</p>
+<p>多个变量的联合熵，这里给出两个变量 X 和 Y 的联合熵表达式：</p>
+<script type="math/tex; mode=display">
+Ent(X,Y) = -\sum\limits_{i=1}^{n}p(x_i,y_i)logp(x_i,y_i)</script><p>有了联合熵，我们可以得到条件熵的表达式 $H(Y|X)$，条件熵类似于条件概率, 它度量了我们已知X的情况下Y的不确定性。表达式如下：</p>
+<script type="math/tex; mode=display">
+Ent(D|X)  = \sum\limits_{i=1}^{n}p(x_i)Ent(Y|X = x_i) =\sum\limits_{i=1}^V\frac{|D^i|}{D}Ent(D^i)</script><p><strong><em>Q3：我们刚才提到 Ent(D)度量了 Y 的不确定性，条件熵 Ent(D|X) 度量了我们在知道X以后Y的不确定性，那么 Ent(D)-Ent(D|X) 表示什么呢？</em></strong></p>
+<p>它度量了在得知 X 以后使得 Y 不确定性减少程度，也就是 X 为我们预测 Y 提供了多少有用的信息。这个度量叫做信息增益，也称为互信息</p>
+<script type="math/tex; mode=display">
+Gain(D, X) = Ent(D)-Ent(D|X) = Ent(D)-\sum\limits _{i=1}^V \frac {|D^i|}{D}Ent(D^i)</script><p>ID3 算法就是用信息增益来判断当前节点应该用什么特征来构建决策树。不同的特征具有的信息增益不同，信息增益大表示该特征具有更强的分类能力。选择信息增益最大的特征来建立决策树的当前节点。</p>
+<p><strong><em>Q4：计算以下几个特征的信息增益，并按照信息增益选择特征，设计出最合理的决策树。( 周志华 《机器学习》P76)</em></strong></p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/ehe2CDAd0d.png?imageslim" width="80%"></p>
+<p><strong>ID3算法不足：</strong></p>
+<p>ID3算法虽然提出了新思路，但是还是有很多值得改进的地方。　　</p>
+<ol>
+<li>ID3没有考虑连续变量，比如长度，密度都是连续值，无法在 ID3 运用。这大大限制了 ID3 的用途。</li>
+<li>ID3采用信息增益大的特征优先建立决策树的节点。在相同条件下，取值比较多的特征比取值少的特征信息增益大。</li>
+<li>ID3算法对于缺失值的情况没有做考虑</li>
+<li>没有考虑过拟合的问题</li>
+</ol>
+<p><strong><em>Q5：能否举例说明第二个问题吗？第二个问题和第三个问题有什么关系？</em></strong></p>
+<p>举一个极端的例子，当每个样本都做为一个类别的时候。以上例的ID作为特征，求ID的信息增益，显然，ID将每个样本划分为一个区域，每个区域的西瓜好坏都是确定的，因此ID作为特征得到的条件熵为0，也就是ID的信息增益为最大。但是这种做法毫无意义。会发生严重的过拟合。</p>
+<p>对于连续变量，一般情况下每个样本的对应一个值，连续变量的取值数量要远远大于离散变量，导致连续变量的信息增益远大于离散变量，显然，这是不合理的。</p>
+<p>昆兰基于上述不足，对ID3算法做了改进，这就是 C4.5 算法。下面我们介绍一下 C4.5 算法。</p>
+<h1 id="3-C4-5"><a href="#3-C4-5" class="headerlink" title="3. C4.5"></a>3. C4.5</h1><p><strong>C4.5算法的改进</strong></p>
+<p>昆兰在 C4.5 算法中就以上四个问题做了改进。</p>
+<ol>
+<li><p>对于第一个问题，不能处理连续特征， C4.5 的思路是将连续的特征离散化。比如 m 个样本的连续特征 A 有 m 个:</p>
+<ul>
+<li>从小到大排列为 $a_1,a_2,…,a_{m}$ </li>
+<li>取相邻两样本值的平均数，一共取得 m-1 个划分点，其中第 i 个划分点 $T_i$ 表示为：$T_i = \frac{a_i+a_{i+1}}{2}$。</li>
+<li>对于这 m-1 个点，分别计算以该点作为二元分类点时的信息增益。</li>
+<li>选择信息增益最大的点作为该连续特征的二元离散分类点。比如取到的增益最大的点为 $a_t$，则小于 $a_t$ 的值为类别 1，大于 $a_t$ 的值为类别 2，这样我们就做到了连续特征的离散化。</li>
+<li>计算离散之后的特征的信息增益比。</li>
+<li>注意，则该属性后面还可以参与子节点的产生选择过程。</li>
+</ul>
+<p><strong><em>Q6：计算以下密度和含糖率的信息增益比，并将密度和含糖率添加进生成的决策树中。( 周志华 《机器学习》P84)</em></strong></p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/DJL6cE4a1e.png?imageslim" width="80%"></p>
+</li>
+<li><p>对于第二个问题，我们引入了信息增益比的，它是信息增益和特征熵的比值，其实质是信息增益的标准化 (无量纲化)。表达式如下：</p>
+</li>
+</ol>
+<script type="math/tex; mode=display">
+Gain\_ratio(D,A) = \frac{Gain(D, A)}{IV(A)}</script><p>​    其中 D 为样本特征输出的集合，A 为样本特征，对于特征熵 $IV(A)$，表达式如下：</p>
+<script type="math/tex; mode=display">
+IV(A) = -\sum\limits_{i=1}^{n}\frac{|D_i|}{|D|}log_2\frac{|D_i|}{|D|}</script><p>​    其中 n 为特征 A 的类别数， $D_i$ 为特征 A 的第 i 个取值对应的样本个数。D 为样本个数。特征数越多的特征    对应的特征熵 $IV(A)$ 越大，它作为分母，可以校正信息增益容易偏向于取值较多的特征的问题。</p>
+<ol>
+<li><p>对于第三个缺失值处理的问题，主要需要解决的是两个问题</p>
+<ul>
+<li><p>一是在样本某些特征缺失的情况下选择划分的属性，</p>
+<p>C4.5 的思路是将数据分成两部分，一部分是非缺失值的数据 D1，另一部分是缺失值的数据 D2。然后对于 D1 计算信息增益比，最后乘上一个权重，这个权重是非缺失值的样本占总样本数的比例。</p>
+</li>
+<li><p>二是选定了划分属性，对于在该属性上缺失特征的样本的处理。</p>
+<p>将缺失特征的样本按各个子节点样本的数量比例来分配同时划分入所有的子节点。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/Il3E2liG9H.png?imageslim" width="50%"></p>
+</li>
+</ul>
+<p><strong><em>Q7：计算以下几个特征的信息增益，并按照信息增益选择特征，设计出最合理的决策树。( 周志华 《机器学习》P76)</em></strong></p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/J1jEDl5IiE.png?imageslim" width="80%"></p>
+<p>​</p>
+</li>
+<li><p>C4.5 引入了正则化系数进行初步的剪枝。</p>
+</li>
+</ol>
+<p><strong>C4.5算法的不足与思考</strong></p>
+<ul>
+<li>由于决策树算法非常容易过拟合，因此对于生成的决策树必须要进行剪枝。剪枝的算法有非常多，C4.5 的剪枝方法有优化的空间。思路主要是两种，一种是预剪枝，即在生成决策树的时候就决定是否剪枝。另一个是后剪枝，即先生成决策树，再通过交叉验证来剪枝。</li>
+<li>C4.5 生成的是多叉树，即一个父节点可以有多个节点。很多时候，在计算机中二叉树模型会比多叉树运算效率高。如果采用二叉树，可以提高效率（多叉树会导致我们的数据更快的分裂成多个碎片，从而能导致下一层每个节点的数据量不足，当然，多叉树也可以通过多个二叉树实现）。</li>
+<li>C4.5 只能用于分类，如果能将决策树用于回归的话可以扩大它的使用范围。</li>
+<li>C4.5 由于使用了熵模型，里面有大量的耗时的对数运算，如果是连续值还有大量的排序运算。</li>
+</ul>
+<h1 id="4-CART"><a href="#4-CART" class="headerlink" title="4. CART"></a>4. CART</h1><p><strong>特征选择：Gini 指数</strong></p>
+<p>无论是 ID3 还是 C4.5 都会涉及大量的对数运算。CART 分类树算法使用基尼系数，基尼系数代表了模型的不纯度，基尼系数越小，则不纯度越低，特征越好。</p>
+<p>在分类问题中，假设有 K 个类别，第  k 个类别的概率为 $p_k$, 则基尼系数的表达式为：</p>
+<script type="math/tex; mode=display">
+Gini(p) = \sum\limits_{k=1}^{K}p_k(1-p_k) = 1- \sum\limits_{k=1}^{K}p_k^2</script><p>如果是二类分类问题，计算就更加简单了，如果属于第一个样本输出的概率是 p，则基尼系数的表达式为：</p>
+<script type="math/tex; mode=display">
+Gini(p) = 2p(1-p)</script><p>对于个给定的样本D，假设有 K 个类别, 第 k 个类别的数量为 $C_k$,则样本 D 的基尼系数表达式为：</p>
+<script type="math/tex; mode=display">
+Gini(D) = 1-\sum\limits_{k=1}^{K}(\frac{|C_k|}{|D|})^2</script><p>特别的，对于样本 D，如果根据特征 A 的某个值 a，把 D 分成 D1 和 D2 两部分，则在特征 A 的条件下，D 的基尼系数表达式为：</p>
+<script type="math/tex; mode=display">
+Gini(D|A) = \frac{|D_1|}{|D|}Gini(D_1) + \frac{|D_2|}{|D|}Gini(D_2)</script><p><strong><em>Q8：计算以下特征的Gini系数，生成最优决策树。( 周志华 《机器学习》)</em></strong></p>
+<p><img src="./img/2.1.png" width="80%"></p>
+<p>下面我们对比一下不同的非纯度的度量方式：</p>
+<p>误分类误差：$ \frac{1}{N_m}\sum \limits _{i \in R_m} Count(y_i \neq k(m)) = 1- p_k$</p>
+<p>Gini 系数：$Gini(p) = \sum\limits_{k=1}^{K}p_k(1-p_k) = 1- \sum\limits_{k=1}^{K}p_k^2$</p>
+<p>互熵： $-\sum \limits _{k=1}^{K}p_klogp_k$</p>
+<ul>
+<li><p>对于二分类，如果 P 是 label 为 0 的类比例，这三个度量分别为：</p>
+<p>$1- \text{max}(p, 1-p)，2p(1-p)，- p  log(p) - (1-p)log(1-p)$</p>
+<p>这三种度量相似，但是互熵和 Gini 系数是可导的，更适合数值优化。</p>
+</li>
+</ul>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/fdhH8cg2l7.png?imageslim" width="60%"></p>
+<ul>
+<li><p>互熵和Gini指数对节点中概率的变化更敏感。举例来说，一个二分类模型，每个类各含有400个样本下面有两颗决策树：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/aJEm5fFje1.png?imageslim" width="80%"></p>
+<p>第二种分裂方式产生了纯净的节点，显然更加合理。</p>
+<p>然而两种分裂方式的误分类率均为 0.25，通过误分类率无法分辨两种分裂方式的优劣，而第二种方式的 互熵 和 Gini 指数较低能够较好区分两种分裂方式的优劣。因此树增长应该使用 互熵 和 Gini 指数来度量。</p>
+</li>
+<li><p>假设我们把某个节点的结果设置为概率的 $p_k$ 的类 k 中，则该节点上的训练误差为 $\sum \limits_{k \neq k’} p_k(1-p_k)$ ，与 Gini 指数的形式类似 。</p>
+</li>
+</ul>
+<p><strong>CART分类树的改进：</strong></p>
+<ul>
+<li>采用基尼系数可以降低计算量</li>
+</ul>
+<ul>
+<li><p>连续值处理：其思想和 C4.5 是相同的，都是将连续的特征离散化。唯一的区别在于在选择划分点时的度量方式不同，C4.5 使用的是信息增益比，则 CART 分类树使用的是基尼系数。</p>
+</li>
+<li><p>采用二叉树：ID3 或者 C4.5采用的是多叉树；CART树采用的是二叉树。在 ID3 或者 C4.5 的一棵子树中，离散特征只会参与一层节点的建立；CART树中离散的特征可能参与多层节点的建立。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/i911bHhIe0.png?imageslim" width="80%"></p>
+</li>
+</ul>
+<p>对于生成的决策树做预测的时候，假如测试集里的样本A落到了某个叶子节点，而节点里有多个训练样本。则对于A的类别预测采用的是这个叶子节点里概率最大的类别。</p>
+<p><strong>CART回归树：</strong></p>
+<p>首先，什么是回归树，什么是分类树。两者的区别在于样本输出，如果样本输出是离散值，那么这是一颗分类树。如果样本输出是连续值，那么这是一颗回归树。</p>
+<p>如下图所示，输入为 X1，X2， 输出为连续变量 Y，左上图显示的为一般划分，右上图显示了二叉分裂对特征空间的划分（与坐标轴平行的直线）。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/E08550KFKG.png?imageslim" width="60%"></p>
+<p>CART 回归树和 CART 分类树的建立和预测的区别主要有下面两点：</p>
+<p><strong><em>Q9：请列举回归树和分类树之间的不同点？</em></strong></p>
+<ul>
+<li>连续值的处理方法不同</li>
+<li>决策树建立后做预测的方式不同。</li>
+</ul>
+<ol>
+<li>对于连续值的分割：CART 分类树采用的是用基尼系数来度量特征的各个划分点的优劣情况。但是对于回归模型，我们使用了均方差的度量方式，CART 回归树的度量目标是，对于任意分裂变量 j，对应的任意划分点 s 两边划分成的数据集 R1 和 R2，求出使 R1 和 R2 各自集合的均方差最小，同时 R1 和 R2 的均方差之和最小所对应的变量和变量划分点。表达式为：</li>
+</ol>
+<script type="math/tex; mode=display">
+\underbrace{min}_{j,s}\Bigg[\underbrace{min}_{c_1}\sum\limits_{x_i \in R_1(j,s)}(y_i - c_1)^2 + \underbrace{min}_{c_2}\sum\limits_{x_i \in R_2(j,s)}(y_i - c_2)^2\Bigg]</script><p>根据平方和的极小值来发现最好的二叉划分通常在计算上是不可行的。对于任意待选择变量 j 和分裂点 s，内部极小化可以用下式子求解。</p>
+<script type="math/tex; mode=display">
+\hat c_1 = ave(y_i|x_i \in R_1(j,s)) \\
+\hat c_2 = ave(y_i|x_i \in R_2(j,s))</script><p>其中，$c_1$ 用 R1 区域的输出均值 $\hat c_1$ 估计，$c_2$ 用 R2 区域的样本输出均值 $\hat c_2$ 估计。</p>
+<ol>
+<li><p>决策树建立后的预测方式：假设我们已经将空间划分为 M 个区域 $R_1, R_2, \cdots, R_M$， 之后我们需要求解每个区域上的预测结果。</p>
+<p>CART 分类树采用叶子节点里概率最大的类别作为当前节点的预测类别。即：</p>
+<script type="math/tex; mode=display">
+k(m) = \text{argmax}_k \hat p_{mk}</script><p>表示区域 m 上的多数类。</p>
+<p>而回归树它采用的是每个区域的均值或者中位数来预测输出结果，即：</p>
+</li>
+</ol>
+<script type="math/tex; mode=display">
+f(x) = \sum\limits_{m=1}^{M}I(x \in R_m)</script><p>函数 $I()$ 表示求均值或者求中位数。</p>
+<p>除了上面提到了以外，CART 回归树和 CART 分类树的建立算法和预测没有什么区别。</p>
+<h1 id="5-决策树小结"><a href="#5-决策树小结" class="headerlink" title="5. 决策树小结"></a>5. 决策树小结</h1><p><strong><em>Q9：下表给出了 ID3，C4.5和 CART 的一个比较，请补充表格内容</em></strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>支持模型</th>
+<th>树结构</th>
+<th>特征选择标准</th>
+<th>连续值处理</th>
+<th>缺失值处理</th>
+<th>剪枝</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ID3</td>
+<td>分类</td>
+<td>多叉树</td>
+<td>信息增益</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>C4.5</td>
+<td>分类</td>
+<td>多叉树</td>
+<td>信息增益比</td>
+<td>支持</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>CART</td>
+<td>分类，回归</td>
+<td>二叉树</td>
+<td>基尼系数，均方差</td>
+<td>支持</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>那么 CART 算法还有没有什么缺点呢？</p>
+<ul>
+<li>目前我们学到的特征选择都是选择最优的一个特征来做分类决策 $x_j \le s$，但大多数情况下分类决策不应由某一个特征决定的，而是应该由一组特征决定的 $\sum \alpha_jx_j \le s$。可以参考 HME 模型 (hierarchical mixtures of experts)。</li>
+<li>树模型一般都具有较高的方差，数据的一个较小的变化将导致完全不同的分裂结果（出现中这问题的本质是顶层的分裂错误的影响被传播到下面所有的分裂）。可以通过 bagging 可以减轻不稳定性，代价是增加了计算量。</li>
+</ul>
+<p><strong>决策树算法的优缺点 (借鉴 sklearn)</strong></p>
+<p>首先我们看看决策树算法的优点：</p>
+<p>1）简单直观，决策树可以可视化。</p>
+<p>2）需要很少的数据准备。不需要提前归一化，处理缺失值。</p>
+<p>3）使用决策树预测的代价是O(log2m)。 m为样本数。</p>
+<p>4）既处理分类问题，也可以处理回归问题。很多算法只是专注于分类或者回归。</p>
+<p>5）能够处理多分类问题。</p>
+<p>6）相比于神经网络之类的黑盒分类模型，决策树在逻辑上可以得到很好的解释</p>
+<p>7）可以交叉验证的剪枝来选择模型，从而提高泛化能力。</p>
+<p>8） 对于异常点的容错能力好，健壮性高。</p>
+<p>我们再看看决策树算法的缺点:</p>
+<p>1）决策树算法非常容易过拟合，导致泛化能力不强。可以通过设置节点最小样本数和限制决策树深度来改进。</p>
+<p>2）决策树会因为数据的一个较小的波动导致树结构的剧烈改变。可以通过集成学习之类的方法缓解。</p>
+<p>3）有些比较复杂的关系，比如异或决策树很难学习。这种关系可以换神经网络分类方法来解决。</p>
+<p>4）对于非均衡的数据，生成决策树容易偏向于比例较大的类。可以通过调节样本权重，欠采样，过采样等方法来改善。</p>
+<h1 id="6-怎样运用决策树"><a href="#6-怎样运用决策树" class="headerlink" title="6. 怎样运用决策树"></a>6. 怎样运用决策树</h1><p>首先我们回忆一下欠拟合 (high bias) 和过拟合 (high variance) 的概念。</p>
+<p><strong><em>Q10：以下哪个是欠拟合？哪个性能较好？哪个是过拟合</em></strong></p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/2AH8F9EH91.png?imageslim" width="100%"></p>
+<p>​                 (a)                                   (b)                                (c)</p>
+<p>(a) 欠拟合       (b) 性能较好     (c) 过拟合</p>
+<p><strong><em>Q11：以下哪个是欠拟合？哪个性能较好？哪个是过拟合 （假设贝叶斯最优误差为0）</em></strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>CASE</th>
+<th>训练集误差</th>
+<th>验证集误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>0.1%</td>
+<td>1%</td>
+</tr>
+<tr>
+<td>B</td>
+<td>1%</td>
+<td>11%</td>
+</tr>
+<tr>
+<td>C</td>
+<td>15%</td>
+<td>16%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A:：正好    B：过拟合     C：欠拟合 </p>
+<p>我们来研究一下sklearn中相关的参数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">DecisionTreeClassifier(criterion=<span class="string">'gini'</span>, splitter=<span class="string">'best'</span>, max_depth=<span class="keyword">None</span>, min_samples_split=<span class="number">2</span>, </span><br><span class="line">                       min_samples_leaf=<span class="number">1</span>, min_weight_fraction_leaf=<span class="number">0.0</span>, max_features=<span class="keyword">None</span>, </span><br><span class="line">                       random_state=<span class="keyword">None</span>, max_leaf_nodes=<span class="keyword">None</span>, min_impurity_decrease=<span class="number">0.0</span>, </span><br><span class="line">                       min_impurity_split=<span class="keyword">None</span>, class_weight=<span class="keyword">None</span>, presort=<span class="keyword">False</span>)</span><br><span class="line"></span><br><span class="line">DecisionTreeRegressor(criterion=<span class="string">'mse'</span>, splitter=<span class="string">'best'</span>, max_depth=<span class="keyword">None</span>, min_samples_split=<span class="number">2</span>, </span><br><span class="line">                      min_samples_leaf=<span class="number">1</span>, min_weight_fraction_leaf=<span class="number">0.0</span>, max_features=<span class="keyword">None</span>, </span><br><span class="line">                      random_state=<span class="keyword">None</span>, max_leaf_nodes=<span class="keyword">None</span>, min_impurity_decrease=<span class="number">0.0</span>, </span><br><span class="line">                      min_impurity_split=<span class="keyword">None</span>, presort=<span class="keyword">False</span>)</span><br></pre></td></tr></table></figure>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/AfgHIHDlH8.png?imageslim" width="100%"></p>
+<p>决策树常用的一些参数：</p>
+<p>max_features，max_depth，min_samples_split，min_samples_leaf，class_weight</p>
+<p><strong><em>Q12：针对以下几种情况，分析怎样调整相关参数：</em></strong></p>
+<p>模型过拟合（高方差）：max_features：减小，max_depth：减小，min_samples_split：增大，min_samples_leaf：增大</p>
+<p>模型欠拟合（高偏差）：max_features：增大，max_depth：增大，min_samples_split：减小，min_samples_leaf：减小</p>
+<p>数据不平衡：class_weight：’balanced’ 或自己指定权重。</p>
+<p>引用文献：</p>
+<p>周志华 《机器学习》</p>
+<p>李航 《统计学习方法》</p>
+<p> <a href="https://book.douban.com/search/T.%20Hastie" target="_blank" rel="noopener">T. Hastie</a> / <a href="https://book.douban.com/search/R.%20Tibshirani" target="_blank" rel="noopener">R. Tibshirani</a> / <a href="https://book.douban.com/search/J.%20H.%20Friedman" target="_blank" rel="noopener">J. H. Friedman</a>  《The Elements of Statistical Learning》</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">August</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://yoursite.com/决策树的进化史/">http://yoursite.com/决策树的进化史/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://yoursite.com" target="_blank">机器学习随笔</a>！</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/机器学习/">机器学习</a><a class="post-meta__tags" href="/tags/评估指标/">评估指标</a></div><div class="post-qr-code"><div class="post-qr-code-item"><img class="post-qr-code__img" src="https://i.loli.net/2018/04/23/5addf3180d5c3.jpg"><div class="post-qr-code__desc">微信打赏</div></div><div class="post-qr-code-item"><img class="post-qr-code__img" src="http://p7l96nurm.bkt.clouddn.com/blog/180424/Al2II5ld9I.png"><div class="post-qr-code__desc">支付宝打赏</div></div></div><nav id="pagination"><div class="next-post pull-right"><a href="/lr正则化的直观理解/"><span>直观理解正则化</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="disqus_thread"></div><script>var unused = null;
+var disqus_config = function () {
+  this.page.url = 'http://yoursite.com/决策树的进化史/';
+  this.page.identifier = '决策树的进化史/';
+  this.page.title = '决策树的进化史';
+}
+var d = document, s = d.createElement('script');
+s.src = "https://" + 'https-2018august-github-io' +".disqus.com/embed.js";
+s.setAttribute('data-timestamp', '' + +new Date());
+(d.head || d.body).appendChild(s);</script><script id="dsq-count-src" src="https://https-2018august-github-io.disqus.com/count.js" async></script></div></div><footer><div class="layout" id="footer"><div class="copyright">&copy;2013 - 2018 By August</div><div class="framework-info"><span>驱动 - </span><a href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="busuanzi"><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file-o"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="/js/third-party/anime.min.js"></script><script src="/js/third-party/jquery.min.js"></script><script src="/js/third-party/jquery.fancybox.min.js"></script><script src="/js/third-party/velocity.min.js"></script><script src="/js/third-party/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.5.3"></script><script src="/js/fancybox.js?version=1.5.3"></script><script src="/js/sidebar.js?version=1.5.3"></script><script src="/js/copy.js?version=1.5.3"></script><script src="/js/fireworks.js?version=1.5.3"></script><script src="/js/transition.js?version=1.5.3"></script><script src="/js/scroll.js?version=1.5.3"></script><script src="/js/head.js?version=1.5.3"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script></body></html>

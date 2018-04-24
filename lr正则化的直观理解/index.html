@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="直观理解正则化"><meta name="keywords" content="机器学习,正则化"><meta name="author" content="August,undefined"><meta name="copyright" content="August"><title>直观理解正则化 | 机器学习随笔</title><link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.3"><link rel="dns-prefetch" href="https://cdn.staticfile.org"><link rel="dns-prefetch" href="https://cdn.bootcss.com"><link rel="dns-prefetch" href="https://creativecommons.org"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  localSearch: undefined
+} </script></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar"><div class="toggle-sidebar-info text-center"><span data-toggle="切换文章详情">切换站点概览</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-三种优化问题"><span class="toc-number">1.</span> <span class="toc-text">1. 三种优化问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-L1-正则化和-L2-正则化的几何含义"><span class="toc-number">2.</span> <span class="toc-text">2. L1 正则化和 L2 正则化的几何含义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-L1-正则化和-L2-正则化正则化的推广"><span class="toc-number">3.</span> <span class="toc-text">3. L1 正则化和 L2 正则化正则化的推广</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="http://p7l96nurm.bkt.clouddn.com/blog/180423/kC2iKEe0K1.jpg"></div><div class="author-info__name text-center">August</div><div class="author-info__description text-center"></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">文章</span><span class="pull-right">3</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">标签</span><span class="pull-right">3</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">分类</span><span class="pull-right">1</span></a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(http://p7l96nurm.bkt.clouddn.com/blog/180424/llc3hgkLIF.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">机器学习随笔</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus"><a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a></span></div><div id="post-info"><div id="post-title">直观理解正则化</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2018-04-24</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/machine-learning/">machine learning</a><span class="post-meta__separator">|</span><i class="fa fa-comment-o post-meta__icon" aria-hidden="true"></i><a href="/lr正则化的直观理解/#disqus_thread"><span class="disqus-comment-count" data-disqus-identifier="lr正则化的直观理解/"></span></a><div class="post-meta-wordcount"><span>字数总计: </span><span class="word-count">1,473</span><span class="post-meta__separator">|</span><span>阅读时长: 5 分钟</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div id="post-content"><p>本文从无约束的优化问题、有等式约束的优化问题和等式和不等式约束的优化问题三种优化问题的几何意义入手，讲解了L1 正则化和 L2 正则化的几何含义，进而推广至正则化的一般形式： $L_q$ 正则化 和  Elastic Net 正则化，得到L1 正则化和 L2 正则化的折中版本。</p>
+<a id="more"></a>
+<h1 id="1-三种优化问题"><a href="#1-三种优化问题" class="headerlink" title="1. 三种优化问题"></a>1. 三种优化问题</h1><p>通常我们求解的最优化问题可以分为以下三类：</p>
+<ul>
+<li><p>无约束的优化问题：</p>
+<p>$min f(X)$</p>
+<p>这是最简单的情况，解决方法通常是 $f(X)$ 的导数 $f’(X)$ ，然后令 $f’(X) = 0$ ，可以求得极值点，再将这些极值点带入原函数验证即可；如果是凸函数，极值点即为最优解。</p>
+<p>其几何含义是：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/I1LhaJe4D9.png?imageslim" width="60%"></p>
+</li>
+<li><p>有等式约束的优化问题</p>
+<p>$min  f(X)$</p>
+<p>$s.t.  g(X) = 0$ </p>
+<p>注：$s.t.$ 表示约束条件。</p>
+<p>常常使用的方法就是拉格朗日乘子法（Lagrange Multiplier ) ，即写成 $ L(\lambda ,X) = f(X) + \lambda g(X)$，称为拉格朗日函数，系数 $\lambda$ 称为拉格朗日乘子。通过 $L(\lambda ,X) $对各个变量 $(X, \lambda )$ 求偏导，令其为零，可以求得极值点集合，然后验证求得最优值。</p>
+<p>其几何含义是：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/1hl6cgh5CF.png?imageslim" width="60%"></p>
+</li>
+<li><p>等式和不等式约束的优化问题</p>
+<p>$min  f(X)$</p>
+<p>$s.t.  g(X) = 0$</p>
+<p>​    $h(X) \le 0$</p>
+</li>
+</ul>
+<p>注： $s.t.$ 表示约束条件。</p>
+<p>常常使用的方法就是 KKT 条件。$ L(\mu, \lambda ,X) = f(X) + \lambda g(X) + \mu h(X)$，利用最优值的必要条件 (KKT条件)：</p>
+<ul>
+<li>$ L(\mu, \lambda ,X)$ 对变量的导数为 0</li>
+<li>$g(X) = 0$</li>
+<li>$\mu h(X) = 0$</li>
+</ul>
+<p>求取这些等式之后就能得到候选最优值。其中第三个式子非常有趣，因为 $h(X) \le 0$，如果要满足这个等式，必须 $\mu=0$ 或者 $h(X) = 0$。</p>
+<p>那么 KTT 的几何含义是什么呢？</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/fBIE1B3jC1.png?imageslim" width="60%"></p>
+<h1 id="2-L1-正则化和-L2-正则化的几何含义"><a href="#2-L1-正则化和-L2-正则化的几何含义" class="headerlink" title="2. L1 正则化和 L2 正则化的几何含义"></a>2. L1 正则化和 L2 正则化的几何含义</h1><p>L1 正则化通常称为 Lasso 正则化：</p>
+<p>$J(\theta) = -\sum\limits_{i=1}^{m}(y^{(i)}log(h_{\theta}(x^{(i)}))+ (1-y^{(i)})log(1-h_{\theta}(x^{(i)})))+\frac{\lambda}{m}\sum\limits_{j=1}^n|\theta_j|$</p>
+<p>L2 正则化通常称为 Ridge 正则化：</p>
+<p>$J(\theta) = -\sum\limits_{i=1}^{m}(y^{(i)}log(h_{\theta}(x^{(i)}))+ (1-y^{(i)})log(1-h_{\theta}(x^{(i)})))+\frac{\lambda}{2m}\sum\limits_{j=1}^n\theta_j^2$</p>
+<p>我们可以写成统一的形式：</p>
+<p>$ J(\theta, \mu)= f(\theta) + \mu h(\theta)$</p>
+<p>可以还原为：</p>
+<p>$min  f(\theta)$</p>
+<p>$s.t.  h(\theta) = 0$</p>
+<p>那么他们的几何含义是：</p>
+<p>对于 L1 正则化 ( Lasso 正则化)：$h(\theta) = \sum\limits_{j=1}^n|\theta_j|$</p>
+<p>对于 L2 正则化 ( Ridge 正则化)：$h(\theta) = \sum\limits_{j=1}^n\theta_j^2$</p>
+<p><strong><em>Q：以下哪个图形是 L1 正则化， 哪个图形是 L2 正则化 ？</em></strong></p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/Hif4Gff04b.png?imageslim" width="60%"></p>
+<p>左边的图为 L1 正则化，右图为 L2 正则化。</p>
+<p>因为 对于 L1 正则化而言 $h(\theta) = |w_1| + |w_2| = 0$ ，在图中表示一个菱形。</p>
+<p>对于 L2 正则化而言 $h(\theta) = w_1^2 + w_2^2 = 0$ ，在图中表示一个圆形。</p>
+<p><strong><em>Q1：为什么L1 正则化可以获得稀疏特征？</em></strong></p>
+<p>不同的维度系数一般都是不一样的，因此常见的损失函数图像是一个椭圆形，调整参数$\lambda$ 的值，椭圆形和菱形的交接处很大可能性会落在坐标轴附近；实际使用的特征维度是高维的，正常情况下就是在某些维度上不会交于坐标轴上，在某些维度上交于坐标轴或坐标轴附近，所以才有稀疏解；与L2正则化相比，L1正则化更容易得到稀疏解，而不是一定会得到稀疏解，毕竟还是有特例的（比如恰好椭圆与坐标原点相交）。</p>
+<p><strong><em>Q2：$\lambda$ 变大，菱形和圆形怎么变化？</em></strong></p>
+<p>$\lambda$ 越大，菱形和圆形越小，求得的模型参数越小。</p>
+<p><strong><em>Q3：为什么 L2 正则化比 L1 正则化应用更加广泛？</em></strong></p>
+<p>因为 L2 正则化的约束边界光滑且可导，便于采用梯度下降法，而L1正则化不可导，只能采用坐标轴下降法或最小角回归法，计算量大。而且，L1 正则化的效果并不会比 L2 正则化好（自己的见解）。</p>
+<h1 id="3-L1-正则化和-L2-正则化正则化的推广"><a href="#3-L1-正则化和-L2-正则化正则化的推广" class="headerlink" title="3. L1 正则化和 L2 正则化正则化的推广"></a>3. L1 正则化和 L2 正则化正则化的推广</h1><p>逻辑回归正则化可以写成统一的形式 $L_q$ 正则化：</p>
+<script type="math/tex; mode=display">
+J(\theta) = -\sum\limits_{i=1}^{m}(y^{(i)}log(h_{\theta}(x^{(i)}))+ (1-y^{(i)})log(1-h_{\theta}(x^{(i)})))+\frac{\lambda}{2m}\sum\limits_{j=1}^n|\theta_j|^q</script><p>其中 $q \ge 0$。不同的 q 值对应着不同的约束边界，如下图所示：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/GmABF7lcji.png?imageslim" width="100%"></p>
+<p>从上图可以看出，</p>
+<ul>
+<li><p>$q = 1$ 对应着 L1 正则化， $q = 2$ 对应着 L2 正则化。</p>
+</li>
+<li><p>而当 $q &lt; 1$ 时，约束边界为非凸函数，求解最优值非常困难。 $q=1$ 是满足约束边界为凸的最小值。</p>
+</li>
+<li><p>当 $q \le1$ 时，约束边界在坐标轴上不可导，为非光滑函数，不能用梯度下降法进行求解。</p>
+</li>
+<li><p>对于 $q ∈ (1, 2)$ 的情况是 L1 正则化和 L2 正则化的折中，同时具有两者的优点。此时的约束边界为凸边界，既具有 L2 正则化的光滑可导性，同时具有 L1 正则化获得稀疏特征的优点。</p>
+</li>
+<li><p>实践表明，对于 $q &gt;2$ 的情况，效果并不会比 $q ∈ [1, 2]$ 好，没必要进行讨论。</p>
+</li>
+<li><p>Zou 和 Hastie (2005) 引入了 Elastic Net 正则化，可以通过参数 $\alpha$ 调节L1正则化和L2正则化的权重</p>
+<p>即：</p>
+<script type="math/tex; mode=display">
+\frac{\lambda}{2m}\sum\limits_{j=1}^n(\alpha \theta ^2 + (1-\alpha)|\theta_j|)</script><p>如下图为 $q = 1.2$ 时的 $L_q$ 正则化 和 $\alpha = 0.2$ 时的 Elastic Net 正则化，两种不同的方式对 L1 正则化和 L2 正则化进行了折中。这两种方法均继承了 L1 正则化获得稀疏矩阵的优点。至于光滑可导性，乍一看二者没什么区别，实际上 $L_q$ 正则化在坐标处是可导的，而 Elastic Net 正则化在坐标处是不可导的。</p>
+</li>
+</ul>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180424/F6bgLKjhgk.png?imageslim" width="50%"></p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">August</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://yoursite.com/lr正则化的直观理解/">http://yoursite.com/lr正则化的直观理解/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://yoursite.com" target="_blank">机器学习随笔</a>！</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/机器学习/">机器学习</a><a class="post-meta__tags" href="/tags/正则化/">正则化</a></div><div class="post-qr-code"><div class="post-qr-code-item"><img class="post-qr-code__img" src="https://i.loli.net/2018/04/23/5addf3180d5c3.jpg"><div class="post-qr-code__desc">微信打赏</div></div><div class="post-qr-code-item"><img class="post-qr-code__img" src="http://p7l96nurm.bkt.clouddn.com/blog/180424/Al2II5ld9I.png"><div class="post-qr-code__desc">支付宝打赏</div></div></div><nav id="pagination"><div class="prev-post pull-left"><a href="/决策树的进化史/"><i class="fa fa-chevron-left">  </i><span>决策树的进化史</span></a></div><div class="next-post pull-right"><a href="/机器学习评估指标的前世今生/"><span>机器学习评估指标的前世今生</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="disqus_thread"></div><script>var unused = null;
+var disqus_config = function () {
+  this.page.url = 'http://yoursite.com/lr正则化的直观理解/';
+  this.page.identifier = 'lr正则化的直观理解/';
+  this.page.title = '直观理解正则化';
+}
+var d = document, s = d.createElement('script');
+s.src = "https://" + 'https-2018august-github-io' +".disqus.com/embed.js";
+s.setAttribute('data-timestamp', '' + +new Date());
+(d.head || d.body).appendChild(s);</script><script id="dsq-count-src" src="https://https-2018august-github-io.disqus.com/count.js" async></script></div></div><footer><div class="layout" id="footer"><div class="copyright">&copy;2013 - 2018 By August</div><div class="framework-info"><span>驱动 - </span><a href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="busuanzi"><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file-o"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="/js/third-party/anime.min.js"></script><script src="/js/third-party/jquery.min.js"></script><script src="/js/third-party/jquery.fancybox.min.js"></script><script src="/js/third-party/velocity.min.js"></script><script src="/js/third-party/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.5.3"></script><script src="/js/fancybox.js?version=1.5.3"></script><script src="/js/sidebar.js?version=1.5.3"></script><script src="/js/copy.js?version=1.5.3"></script><script src="/js/fireworks.js?version=1.5.3"></script><script src="/js/transition.js?version=1.5.3"></script><script src="/js/scroll.js?version=1.5.3"></script><script src="/js/head.js?version=1.5.3"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script></body></html>
