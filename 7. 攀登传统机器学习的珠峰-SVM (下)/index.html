@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="攀登传统机器学习的珠峰-SVM (下)"><meta name="keywords" content="机器学习,svm"><meta name="author" content="August,undefined"><meta name="copyright" content="August"><title>攀登传统机器学习的珠峰-SVM (下) | 人工智能随笔</title><link rel="shortcut icon" href="/favicon.ico"><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.3"><link rel="dns-prefetch" href="https://cdn.staticfile.org"><link rel="dns-prefetch" href="https://cdn.bootcss.com"><link rel="dns-prefetch" href="https://creativecommons.org"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  localSearch: undefined
+} </script></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar"><div class="toggle-sidebar-info text-center"><span data-toggle="切换文章详情">切换站点概览</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SMO-序列最小优化-算法原理"><span class="toc-number">1.</span> <span class="toc-text">SMO (序列最小优化) 算法原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#回顾SVM优化目标"><span class="toc-number">1.1.</span> <span class="toc-text">回顾SVM优化目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SMO算法的基本思想"><span class="toc-number">1.2.</span> <span class="toc-text">SMO算法的基本思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SMO算法两个变量的选择"><span class="toc-number">1.3.</span> <span class="toc-text">SMO算法两个变量的选择</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#第一个变量的选择"><span class="toc-number">1.3.1.</span> <span class="toc-text">第一个变量的选择 　</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第二个变量的选择"><span class="toc-number">1.3.2.</span> <span class="toc-text">第二个变量的选择</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SMO算法优化求解"><span class="toc-number">1.4.</span> <span class="toc-text">SMO算法优化求解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#求解无约束的优化问题"><span class="toc-number">1.4.1.</span> <span class="toc-text">求解无约束的优化问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#化简为单变量优化问题"><span class="toc-number">1.4.1.1.</span> <span class="toc-text">化简为单变量优化问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#求解单变量无约束问题"><span class="toc-number">1.4.1.2.</span> <span class="toc-text">求解单变量无约束问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#约束条件修正变量结果"><span class="toc-number">1.4.2.</span> <span class="toc-text">约束条件修正变量结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#计算-b"><span class="toc-number">1.4.3.</span> <span class="toc-text">计算 $b$</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SMO算法总结"><span class="toc-number">1.5.</span> <span class="toc-text">SMO算法总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#迭代优化算法小结"><span class="toc-number">1.6.</span> <span class="toc-text">迭代优化算法小结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SVM-回归模型（又称为SVR）"><span class="toc-number">2.</span> <span class="toc-text">SVM 回归模型（又称为SVR）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SVR模型的损失函数度量"><span class="toc-number">2.1.</span> <span class="toc-text">SVR模型的损失函数度量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SVR目标函数的原始形式"><span class="toc-number">2.2.</span> <span class="toc-text">SVR目标函数的原始形式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SVR目标函数的对偶形式"><span class="toc-number">2.3.</span> <span class="toc-text">SVR目标函数的对偶形式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SVM-算法小结"><span class="toc-number">3.</span> <span class="toc-text">SVM 算法小结</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#sklearn-SVM库使用小结"><span class="toc-number">4.</span> <span class="toc-text">sklearn SVM库使用小结</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="http://p7l96nurm.bkt.clouddn.com/blog/180423/kC2iKEe0K1.jpg"></div><div class="author-info__name text-center">August</div><div class="author-info__description text-center"></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">文章</span><span class="pull-right">7</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">标签</span><span class="pull-right">5</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">分类</span><span class="pull-right">1</span></a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(http://p7l96nurm.bkt.clouddn.com/blog/180426/jaAmCbe3cc.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">人工智能随笔</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus"><a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a></span></div><div id="post-info"><div id="post-title">攀登传统机器学习的珠峰-SVM (下)</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2018-05-04</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/machine-learning/">machine learning</a><div class="post-meta-wordcount"><span>字数总计: </span><span class="word-count">5,487</span><span class="post-meta__separator">|</span><span>阅读时长: 18 分钟</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div id="post-content"><p>本节是SVM系列三部曲的最后一部分。主要讲了SMO算法，SVR算法，sklearn中SVM算法的参数介绍和调参建议。网上有很多SMO算法的文章，有的要么讲解的比较浅显，要么就是一堆公式的堆砌，让人看完之后会有各种疑问，比如：SMO算法和EM算法有什么异同点？坐标上升(下降)法与梯度下降(上升)法有什么异同点？什么时候用坐标上升(降法)？什么时候用梯度下降法(上升)？SMO为什么采用两个变量迭代，而不是一个，三个，四个或者更多？SMO算法两个变量的选择是怎么来的？SMO算法的基本步骤是什么？以及SVR和SVC都有哪些具体的区别？有没有详细的物理直观的解释和公式比较？</p>
+<p>针对以上问题，本文都已经详细作答，希望阅读完本SVM三部曲的朋友能够对SVM有更深的了解和认识。文章中夹杂着很多自己的思考和理解，如有不正确的地方，请多多指正，也希望志同道合之士能够多多交流。</p>
+<a id="more"></a>
+<p><strong>友情提示：前方高能，公式推导特别多！！！</strong></p>
+<h1 id="SMO-序列最小优化-算法原理"><a href="#SMO-序列最小优化-算法原理" class="headerlink" title="SMO (序列最小优化) 算法原理"></a>SMO (序列最小优化) 算法原理</h1><h2 id="回顾SVM优化目标"><a href="#回顾SVM优化目标" class="headerlink" title="回顾SVM优化目标"></a>回顾SVM优化目标</h2><p>我们首先回顾下SVM的目标函数：</p>
+<script type="math/tex; mode=display">
+\underbrace{ min }_{\alpha}  \frac{1}{2}\sum\limits_{i=1}^{m}  \sum\limits_{j=1}^{m} \alpha_i\alpha_jy_iy_jK(x_i,x_j) - \sum\limits_{i=1}^{m}\alpha_i \\
+s.t. \; \sum\limits_{i=1}^{m}\alpha_iy_i = 0 \\
+0 \leq \alpha_i \leq C \; , \; \; i=1,2,\cdots,m</script><p> 向量 $α$ 是拉格朗日算子，每个样本 $(x_i, y_i)$ 都对应一个向量分量 $\alpha_i$ 。</p>
+<p>根据上节课的我们需要先求解 $α$，然后根据 $\alpha$ 再求解分类决策函数的参数 $w$ 和 $b$。SMO算法的作用就是高效求解参数向量 $α$ 的值 $α^∗ = (α^∗ _1,α^∗ _2,\cdots, α^∗ _m)$ 。</p>
+<p>KKT约束条件（回想一下上节课的那一幅图）：</p>
+<script type="math/tex; mode=display">
+\alpha_{i}^{*} = 0 \Rightarrow y_ih(x_i) \geq 1 \\
+0 < \alpha_{i}^{*} < C  \Rightarrow y_ih(x_i)  = 1 \\
+\alpha_{i}^{*}= C \Rightarrow y_ih(x_i)  \leq 1</script><p>其中 <script type="math/tex">h(x) = w^* \bullet \phi(x) + b =\sum\limits_{j=1}^{m}\alpha_j^*y_jK(x, x_j)+ b^*</script> 为预测值。</p>
+<h2 id="SMO算法的基本思想"><a href="#SMO算法的基本思想" class="headerlink" title="SMO算法的基本思想"></a>SMO算法的基本思想</h2><p>SMO 是微软研究院的 John C. Platt 在《Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines》一文中提出的，其基本思想是：把含有 m 个参数的原始问题分解成多个子问题分别求解，每个子问题只需要求解两个参数，这样SMO算法就将一个复杂的优化问题转化为一个比较简单的两变量优化问题。每次启发式选择两个变量进行优化，不断循环，直到达到函数最优值。</p>
+<p>什么意思呢？下面我们具体讲解一下。</p>
+<ul>
+<li>假设第一次迭代所选的两个变量是 $\alpha_{i1}, \alpha_{j1}$ ，则$\alpha_1,\cdots,\alpha_{i1-1}, \alpha_{i1+1}, \cdots,\alpha_{j1-1}, \alpha_{j1+1}, \cdots, \alpha_m$视为常数。</li>
+<li>通过极小目标函数求解 $\alpha_{i1} = \alpha_{i1}^{(1)}, \alpha_{j1} = \alpha_{j1}^{(1)}$ ，更新参数向量的 $\alpha$ 的值为 $\alpha_1,\cdots,\alpha_{i1}^{(1)},  \cdots,\alpha_{j1}^{(1)},  \cdots, \alpha_m$。</li>
+<li>更新假设函数的参数 $b$ 。</li>
+<li>进入第二轮迭代，选择两个变量为 $\alpha_{i2}, \alpha_{j2}$，则 $\alpha_1,\cdots,\alpha_{i2-1}, \alpha_{i2+1}, \cdots,\alpha_{j2-1}, \alpha_{j2+1}, \cdots, \alpha_m$ 视为常数。</li>
+<li>通过极小目标函数求解 $\alpha_{i2} = \alpha_{i2}^{(2)}, \alpha_{j2} = \alpha_{j2}^{(2)}$ ，更新参数向量的 $\alpha$ 的值为 $\alpha_1,\cdots,\alpha_{i2}^{(2)},  \cdots,\alpha_{j2}^{(2)},  \cdots, \alpha_m$。</li>
+<li>更新假设函数的参数 $b$ 。</li>
+<li>不断循环迭代，直到达到目标函数最优值。</li>
+</ul>
+<p><strong><em>Q1：之前有没有学过类似的迭代算法，他们的异同点是什么？</em></strong></p>
+<p>梯度下降算法，每次循环只更新一次参数；EM算法（坐标上升法），每个循环更新两次参数。而SMO算法属于坐标上升法，和EM算法更加亲密 (这句话好像也似曾相识，在哪儿见到过？回忆一下)。</p>
+<p>后面我们会详细分析三者的区别与联系。</p>
+<p><strong><em>Q2：为什么要转化为两变量的优化问题？为什么不采用一个变量，三个变量，四个变量，…？ （后面会讲到为什么不用梯度下降法）</em></strong></p>
+<p>假如采用一个变量，比如说 $\alpha_1$，即意味着其他 m-1 个参数视为常数，可以看成关于 $\alpha_1$ 的一元函数求解。但是由于约束条件 $\sum\limits_{i=1}^{m}\alpha_iy_i = 0$, 当其他m-1 个参数为常数时，参数 $ \alpha_1= -y_1\sum\limits_{i=2}^{m}y_i\alpha_i $ 也被固定，意味着 m 个参数均视为常数，因此不能采用一个变量。</p>
+<p>采用两个变量，比如 $\alpha_1$ 和 $\alpha_2$，其他 m-2 个参数参数视为常数，那么根据 $\sum\limits_{i=1}^{m}\alpha_iy_i = 0$ 可以用 $\alpha_1$ 来表示 $\alpha_2$ ，即 $\alpha_1 = y_1 \sum\limits_{i=3}^{m}\alpha_iy_i-\alpha_2y_1y_2 $，将一个二变量 ($\alpha_1, \alpha_2$ ) 的优化转化为单变量 ( $\alpha_2$ ) 的优化问题，从而简化问题。</p>
+<p>假如采用三个变量，四个变量，本身就是一个多变量优化问题，转化之后还是一个多变量优化问题，问题的复杂度还是很大。</p>
+<p>以上我们了解了SMO算法的基本思想，SMO的第一步需要选择两个变量，那么怎样选择这两个变量呢？</p>
+<h2 id="SMO算法两个变量的选择"><a href="#SMO算法两个变量的选择" class="headerlink" title="SMO算法两个变量的选择"></a>SMO算法两个变量的选择</h2><p>和梯度下降类似，SMO算法选择变量的原则是使得目标函数下降的最快。具体该怎样操作呢？</p>
+<h3 id="第一个变量的选择"><a href="#第一个变量的选择" class="headerlink" title="第一个变量的选择 　"></a>第一个变量的选择 　</h3><p>第一个变量 $\alpha_1$ 的选择也称为外循环，这个变量需要选择对目标函数影响最大且距离真实值最离谱的变量 $\alpha_1$ ，也就是违反 KKT 约束条件最严重的样本点。</p>
+<p>对于每个样本点，要满足的 KKT 条件我们上一节已经讲到了： </p>
+<script type="math/tex; mode=display">
+\alpha_{i}^{*} = 0 \Rightarrow y_ig(x_i) \geq 1  \\
+0 < \alpha_{i}^{*} < C  \Rightarrow y_ig(x_i)  = 1 \\
+\alpha_{i}^{*}= C \Rightarrow y_ig(x_i)  \leq 1</script><p><strong><em>Q3:对于样本种的任意一个点，都有可能违反上诉三个条件中的任意一个条件，我们应该首先以违反哪个条件的 $\alpha_i$ 为主呢？也就是违反三个条件中的哪个条件更离谱呢？</em></strong></p>
+<p>对 SVM 决策超平面结果影响最大的是支持向量，因此我们首先应该选择违反 $0 &lt; \alpha_{i}^{*} &lt; C  \Rightarrow y_ig(x_i)  =1$ 这个条件的点。如果这些支持向量都满足KKT条件，再选择违反其他条件的点。</p>
+<h3 id="第二个变量的选择"><a href="#第二个变量的选择" class="headerlink" title="第二个变量的选择"></a>第二个变量的选择</h3><p>第二个变量 $\alpha_2$ 的选择也称为内层循环，假设我们在外层循环已经找到了 $\alpha_1$,  $\alpha_2$ 的选择标准需要满足 $\alpha_2$ 变化最大，即最大 $|E_1−E_2|$ 对应的 $\alpha_2$  （其中 $E_i = \hat y_i-y_i $，即预测值和真实值之间的差值）。</p>
+<p><strong><em>Q4：为什么选择 $|E_1−E_2|$ 最大化作为标准 ？ 怎样理解选择 $|E_1−E_2|$ 足够大变化对应的变量 $\alpha_2$</em></strong> </p>
+<p>更新两个误差很大的样本点对应的变量，比起量误差相似的样本点对应的变量，会带给目标函数更大的变化。下面的公式推导会说明，$\alpha_2$ 的变化幅度恰好与 $|E_1−E_2|$ 成正比。</p>
+<p>由于 $\alpha_1$ 定了的时候，$E_1$ 也确定了，所以要想 $|E_1−E_2|$ 最大，只需要在 $E_1$ 为正时，选择最小的 $E_i$ 作为 $E_2$ ， 在 $E_1$ 为负时，选择最大的 $E_i$ 作为 $E_2$ ，可以将所有的 $E_i$ 保存下来加快迭代。</p>
+<p>如果内存循环找到的点不能让目标函数有足够的下降， 可以采用以下步骤：</p>
+<ul>
+<li>遍历支持向量点来做 $\alpha_2$ , 直到目标函数有足够的下降；</li>
+<li>如果所有的支持向量做 $\alpha_2$ 都不能让目标函数有足够的下降，可以在整个样本集上选择 $\alpha_2$ ；</li>
+<li>如果整个样本集依然不存在，则跳回外层循环重新选择 $\alpha_1​$。</li>
+</ul>
+<h2 id="SMO算法优化求解"><a href="#SMO算法优化求解" class="headerlink" title="SMO算法优化求解"></a>SMO算法优化求解</h2><p>假设我们通过上述方法得到了两个变量$\alpha_1$ 和 $\alpha_2$那么</p>
+<script type="math/tex; mode=display">
+\sum\limits_{i=1}^{m}\alpha_iy_i = 0 \Rightarrow \alpha_1y_1 +  \alpha_2y_2 = -\sum\limits_{i=3}^{m}y_i\alpha_i = \varsigma</script><p>这样我们目标优化函数变为：</p>
+<script type="math/tex; mode=display">
+\;\underbrace{ min }_{\alpha_1, \alpha_1} \frac{1}{2}K_{11}\alpha_1^2 + \frac{1}{2}K_{22}\alpha_2^2 +y_1y_2K_{12}\alpha_1 \alpha_2 -(\alpha_1 + \alpha_2) +y_1\alpha_1\sum\limits_{i=3}^{m}y_i\alpha_iK_{i1} + y_2\alpha_2\sum\limits_{i=3}^{m}y_i\alpha_iK_{i2}  +\text{Const} \\
+s.t. \;\;\alpha_1y_1 +  \alpha_2y_2 = -\sum\limits_{i=3}^{m}y_i\alpha_i = \varsigma \\
+0 \leq \alpha_i \leq C \;\; i =1,2</script><p>以上为有约束条件的的优化问题。传统的方法是采用拉格朗日乘子法进行求解转化为无约束的优化问题进行求解。这里我们采用一种更为自然的方法：</p>
+<ul>
+<li>由于 $\alpha_1, \alpha_2$ 满足 $\alpha_1y_1 +  \alpha_2y_2  = \varsigma$，得到  $\alpha_1 = y_1 \varsigma-\alpha_2y_1y_2$ ，两变量的优化问题可以转化为单变量的优化问题。</li>
+<li>对无约束条件下的单变量优化问题进行求导。求得该变量的值。</li>
+<li>根据约束条件对得到的该变量的值进行修正。</li>
+</ul>
+<p>假设我们上一轮迭代得到的解是 $\alpha_1^{old}, \alpha_2^{old}$，单变量求导 (未考虑约束条件) 得到的解是 $\alpha_1^{new,unc}, \alpha_2^{new,unc}$， 考虑约束条件之后的解为 $\alpha_1^{new}, \alpha_2^{new}$ 。下面我们详细讲解一下求解流程。</p>
+<h3 id="求解无约束的优化问题"><a href="#求解无约束的优化问题" class="headerlink" title="求解无约束的优化问题"></a>求解无约束的优化问题</h3><p>求解无约束的优化问题非常简单，对目标函数求导即可。但在求导之前，最好能够对目标函数进行一下化简。</p>
+<h4 id="化简为单变量优化问题"><a href="#化简为单变量优化问题" class="headerlink" title="化简为单变量优化问题"></a>化简为单变量优化问题</h4><p>令：</p>
+<script type="math/tex; mode=display">
+v_i= \sum\limits_{j=3}^{m}y_j\alpha_jK(x_i,x_j) = h(x_i) -  \sum\limits_{j=1}^{2}y_j\alpha_jK(x_i,x_j) -b</script><p>其中 $h(x_i) = w \bullet \phi(x_i) + b =\sum\limits_{j=1}^{m}\alpha_jy_jK(x_i, x_j)+ b$ 。</p>
+<p>这样我们的优化目标函数简化为：</p>
+<script type="math/tex; mode=display">
+W(\alpha_1,\alpha_2) = \frac{1}{2}K_{11}\alpha_1^2 + \frac{1}{2}K_{22}\alpha_2^2 +y_1y_2K_{12}\alpha_1 \alpha_2 -(\alpha_1 + \alpha_2) +y_1\alpha_1v_1 +  y_2\alpha_2v_2</script><p>由于 $\alpha_1y_1 +  \alpha_2y_2 =  \varsigma$，并且 $y_i^2 = 1$，可以得到 $\alpha_1$ 用  $\alpha_2$ 表达的式子为：</p>
+<script type="math/tex; mode=display">
+\alpha_1 = y_1(\varsigma  - \alpha_2y_2)</script><p>将上式带入我们的目标优化函数，得到仅仅包含 $\alpha_2$ 的单变量函数：</p>
+<script type="math/tex; mode=display">
+W(\alpha_2) = \frac{1}{2}K_{11}(\varsigma  - \alpha_2y_2)^2 + \frac{1}{2}K_{22}\alpha_2^2 +y_2K_{12}(\varsigma - \alpha_2y_2) \alpha_2 -(\alpha_1 + \alpha_2) +(\varsigma  - \alpha_2y_2)v_1 +  y_2\alpha_2v_2</script><h4 id="求解单变量无约束问题"><a href="#求解单变量无约束问题" class="headerlink" title="求解单变量无约束问题"></a>求解单变量无约束问题</h4><p>现在我们开始通过求偏导数来得到 $\alpha_2^{new,unc}$ 。</p>
+<script type="math/tex; mode=display">
+\frac{\partial W}{\partial \alpha_2} = K_{11}\alpha_2 +  K_{22}\alpha_2 -2K_{12}\alpha_2 -  K_{11}\varsigma y_2 + K_{12}\varsigma y_2 +y_1y_2 -1 -v_1y_2 +y_2v_2 = 0</script><p>整理上式有：</p>
+<script type="math/tex; mode=display">
+(K_{11} +K_{22}-2K_{12})\alpha_2 = y_2(y_2-y_1 + \varsigma  K_{11} - \varsigma  K_{12} + v_1 - v_2) \\
+= y_2(y_2-y_1 + \varsigma  K_{11} - \varsigma  K_{12} + (h(x_1) -  \sum\limits_{j=1}^{2}y_j\alpha_jK_{1j} -b ) -(h(x_2) -  \sum\limits_{j=1}^{2}y_j\alpha_jK_{2j} -b))</script><p>我们令:</p>
+<script type="math/tex; mode=display">
+E_i = h(x_i)-y_i = \sum\limits_{j=1}^{m}\alpha_j^{*}y_jK_{ij}+ b - y_i</script><p>其中 $h(x) = w \bullet \phi(x) + b =\sum\limits_{j=1}^{m}\alpha_jy_jK(x, x_j)+ b$ 为假设函数。</p>
+<p>将 $\varsigma  = \alpha_1^{old}y_1 +  \alpha_2^{old}y_2$ 带入上式，我们有：</p>
+<script type="math/tex; mode=display">
+(K_{11} +K_{22}-2K_{12})\alpha_2^{new,unc} = y_2((K_{11} +K_{22}-2K_{12})\alpha_2^{old}y_2 +y_2-y_1 +h(x_1) - h(x_2)) \\
+\;\;\;\; = (K_{11} +K_{22}-2K_{12}) \alpha_2^{old} + y_2(E_1-E_2)</script><p>我们终于得到了 $\alpha_2^{new,unc}$ 的表达式：</p>
+<script type="math/tex; mode=display">
+\alpha_2^{new,unc} = \alpha_2^{old} + \frac{y_2(E_1-E_2)}{K_{11} +K_{22}-2K_{12}}</script><h3 id="约束条件修正变量结果"><a href="#约束条件修正变量结果" class="headerlink" title="约束条件修正变量结果"></a>约束条件修正变量结果</h3><p>下面我们考虑约束条件：</p>
+<p>$\alpha_1y_1 +  \alpha_2y_2  = \varsigma$</p>
+<p>$\ 0 \leq \alpha_i \leq C \;\; i =1,2$</p>
+<p><strong><em>Q5：请在坐标轴中画出上述约束条件的几何表示</em></strong> </p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/Hle26K1bil.png" width="100%"></p>
+<p>$0 \leq \alpha_i \leq C $ 将两变量限制在 $[0, C] \times [0, C]$ 的矩形中，$\alpha_1y_1 +  \alpha_2y_2  = \varsigma$ 将两个变量限制在矩形中平行于对角线的线段上。左图为 $y_1,y_2$ 异号的情况，右图为 $y_1,y_2$ 同号的情况。</p>
+<p>由于 $\alpha_2^{new}$ 必须要在方框内且在直线上取得。假设 L 和 H 分别是上图中 $\alpha_2^{new}$ 所在的线段的边界。那么：</p>
+<script type="math/tex; mode=display">
+L \leq \alpha_2^{new} \leq H</script><p>对于上面左图中的情况 $y_1\neq y_2$，则</p>
+<script type="math/tex; mode=display">
+L = max(0, \alpha_2^{old}-\alpha_1^{old}) \;\;\;H = min(C, C+\alpha_2^{old}-\alpha_1^{old})</script><p>对于上面右图中的情况 $y_1= y_2$，有：</p>
+<script type="math/tex; mode=display">
+L = max(0, \alpha_2^{old}+\alpha_1^{old}-C) \;\;\; H = min(C, \alpha_2^{old}+\alpha_1^{old})</script><p>假如我们通过求导得到的 $\alpha_2^{new,unc}$，则最终的 $\alpha_2^{new}$ 应该为：</p>
+<script type="math/tex; mode=display">
+\alpha_2^{new}= \begin{cases} H& { \alpha_2^{new,unc} > H}\\ \alpha_2^{new,unc}& {L \leq \alpha_2^{new,unc} \leq H}\\ L& {\alpha_2^{new,unc} < L} \end{cases}</script><p>利用上面讲到的 $\alpha_2^{new,unc}$ 和 $\alpha_2^{new}$ 的关系式，我们就可以得到我们新的 $\alpha_2^{new}$ 了。</p>
+<p>由于其他 $m-2$ 个变量固定，因此：</p>
+<script type="math/tex; mode=display">
+\alpha_1^{old}y_1+\alpha_2^{old}y_2=\alpha_1^{new}y_1+\alpha_2^{new}y_2</script><p>求得：</p>
+<script type="math/tex; mode=display">
+\alpha_1^{new}=\alpha_1^{old}+y_1y_2(\alpha_2^{old}-\alpha_2^{new})</script><h3 id="计算-b"><a href="#计算-b" class="headerlink" title="计算 $b$"></a>计算 $b$</h3><p>在每次完成两个变量的优化之后，需要重新计算阈值 $b$。当 $0 &lt; \alpha_{1}^{new} &lt; C$ 时，我们有</p>
+<script type="math/tex; mode=display">
+y_1 - \sum\limits_{i=1}^{m}\alpha_iy_iK_{i1} -b_1 = 0</script><p>于是新的 $b_1^{new}$ 为：</p>
+<script type="math/tex; mode=display">
+b_1^{new} = y_1 - \sum\limits_{i=3}^{m}\alpha_iy_iK_{i1} - \alpha_{1}^{new}y_1K_{11} - \alpha_{2}^{new}y_2K_{21}</script><p>计算出 $E_1$ 为：</p>
+<script type="math/tex; mode=display">
+E_1 = h(x_1) - y_1 = \sum\limits_{i=3}^{m}\alpha_iy_iK_{i1} + \alpha_{1}^{old}y_1K_{11} + \alpha_{2}^{old}y_2K_{21} + b^{old} -y_1</script><p>将 $b_1^{new}​$ 用 $E_1​$ 表示为：</p>
+<script type="math/tex; mode=display">
+b_1^{new} = -E_1 -y_1K_{11}(\alpha_{1}^{new} - \alpha_{1}^{old}) -y_2K_{21}(\alpha_{2}^{new} - \alpha_{2}^{old}) + b^{old}</script><p>同样的，如果 $0 &lt; \alpha_{2}^{new} &lt; C$, 那么有：</p>
+<script type="math/tex; mode=display">
+b_2^{new} = -E_2 -y_1K_{12}(\alpha_{1}^{new} - \alpha_{1}^{old}) -y_2K_{22}(\alpha_{2}^{new} - \alpha_{2}^{old}) + b^{old}</script><p>最终的 $b^{new}$ 为：</p>
+<script type="math/tex; mode=display">
+b^{new} =  \begin{cases} \frac{b_1^{new} + b_2^{new}}{2} \;\; 假如\alpha_2对于的样本点是支持向量 \\   
+b_1^{new} \;\;\;\;\;\;\;\; 假如\alpha_2对应的样本点不是支持向量 \end{cases}</script><p>得到了 $b^{new}$ 为我们需要更新 $E_i$:</p>
+<script type="math/tex; mode=display">
+E_i^{new} = \sum\limits_{S}y_j\alpha_jK(x_i,x_j) + b^{new} -y_i</script><p>其中，S 是所有支持向量 $x_j$ 的集合，利用 $b^{new}$ 和 $E_i^{new} $ 选择新的变量进行循环迭代。</p>
+<h2 id="SMO算法总结"><a href="#SMO算法总结" class="headerlink" title="SMO算法总结"></a>SMO算法总结</h2><p>输入是 m 个线性可分的样本 ${(x_1,y_1), (x_2,y_2), …, (x_m,y_m),}$ </p>
+<p>其中 x 为 n 维特征向量。y 为二元分类结果 1 或 -1, 精度 $\epsilon$。</p>
+<p>输出是近似解 $\alpha$。</p>
+<p>算法过程如下：</p>
+<p>1）取初始值 $\alpha^{0} = 0, k =0$。</p>
+<p>2) 选择 $α_1^k, α_2^k$，求出新的 $\alpha_2^{new,unc}$：</p>
+<script type="math/tex; mode=display">
+\alpha_2^{new,unc} = \alpha_2^{k} + \frac{y_2(E_1-E_2)}{K_{11} +K_{22}-2K_{12}}</script><p>3) 按照下式求出 $\alpha_2^{k+1}$：</p>
+<script type="math/tex; mode=display">
+\alpha_2^{k+1}= \begin{cases} H& {L \leq \alpha_2^{new,unc} > H}\\ \alpha_2^{new,unc}& {L \leq \alpha_2^{new,unc} \leq H}\\ L& {\alpha_2^{new,unc} < L} \end{cases}</script><p>4) 利用 $\alpha_2^{k+1}$ 和 $\alpha_1^{k+1}$ 的关系求出 $\alpha_1^{k+1}$。</p>
+<p>5) 计算 $b^{k+1}$ 和 $E_i$。</p>
+<p>6）在精度 $\epsilon$ 范围内是否满足如下的终止条件：</p>
+<script type="math/tex; mode=display">
+\sum\limits_{i=1}^{m}\alpha_iy_i = 0 \\
+0 \leq \alpha_i \leq C, i =1,2...m \\
+\alpha_{i}^{*} = 0 \Rightarrow y_ih(x_i) \geq 1 \\
+0 < \alpha_{i}^{*} < C  \Rightarrow y_ih(x_i)  = 1 \\
+\alpha_{i}^{*}= C \Rightarrow y_ih(x_i)  \leq 1</script><p>7) 如果满足则结束，返回 $α^{k+1}$,否则转到步骤2。</p>
+<h2 id="迭代优化算法小结"><a href="#迭代优化算法小结" class="headerlink" title="迭代优化算法小结"></a>迭代优化算法小结</h2><p>目前我们已经学到两种基本的迭代优化算法，三种应用。下面我用更加直观的方式一一说明。</p>
+<ol>
+<li><p>梯度下降 (或上升)法：沿函数值增幅最大 (即梯度方向) 的反方向走，就能使函数值减小 (或增大) 幅度越大。主要应用在逻辑回归算法，深度学习等算法中。如下图所示：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/E3gF6gK6e6.png" width="60%"></p>
+</li>
+<li><p>坐标上升 (或下降法) 法：每次只选择一个维度，将原始的问题变成一个一元函数，然后针对这个一元函数求极值，如此反复轮换不同的维度进行迭代。主要应用包括EM算法和SMO算法。</p>
+<ul>
+<li><p>对于EM算法，显然是一个二变量迭代的坐标上升问题，其特点是两个维度轮换迭代。难点是怎样连接迭代步骤中的E步和M步（ Jensen 不等式，将 log 中的累加函数提取到log外面）。如下图所示：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/dHHE0BiDjm.png" width="68%"></p>
+<p>对于 SMO 算法则是一个 m-1 (m表示样本量) 维度的坐标下降问题，难点在于该选择哪个坐标作为下一个循环的迭代，同时还需要对求导得到的变量值进行约束条件限制。（暂时无法可视化高维图像，故此处没有示意图）</p>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong><em>Q6：SMO算法中 $\alpha$ 的维度是 m，为什么坐标下降算法中坐标的维度变成了m-1？</em></strong></p>
+<p>由于约束条件 $\sum\limits_{i=1}^{m}\alpha_iy_i = 0$ 的存在，我们可以判断，一直任意 m-1 个变量的值，那么另一个变量的值也就确定了，即 $\sum\limits_{i=1}^{m}\alpha_iy_i = 0$ </p>
+<p><strong><em>Q7：为什么EM算法和 SMO算法不能直接用梯度下降 (或上升) 进行求解？</em></strong></p>
+<p>回忆一下EM算法中的似然函数：</p>
+<script type="math/tex; mode=display">
+\theta, z = arg \max \limits_{\theta,z}L(\theta, z)   = arg \max \limits_{\theta,z}\sum\limits_{i=1}^m log\sum\limits_{z^{(i)}}P(x^{(i)}， z^{(i)}|\theta)</script><p>由于$ logP(x^{(i)}|\theta)$ 是$P(x^{(i)}， z^{(i)}|\theta)$ 边缘概率，转化为 $ logP(x^{(i)}|\theta)$ 求导后形式会非常复杂（可以想象下 $log(f_1(x)+ f_2(x)+…$复合函数的求导) ，所以很难直接通过梯度下降法求解得到 $z$ 和 $θ$。</p>
+<p>对于SMO算法，其优化函数为：</p>
+<script type="math/tex; mode=display">
+\underbrace{ min }_{\alpha}  \frac{1}{2}\sum\limits_{i=1}^{m}  \sum\limits_{j=1}^{m} \alpha_i\alpha_jy_iy_jK(x_i,x_j) - \sum\limits_{i=1}^{m}\alpha_i \\
+s.t. \; \sum\limits_{i=1}^{m}\alpha_iy_i = 0 \\
+0 \leq \alpha_i \leq C \; , \; \; i=1,2,\cdots,m</script><p>对于任意一个 $\alpha_i$ 求导得到 $\frac{1}{2}  \sum\limits_{j=1}^{m} \alpha_i\alpha_jy_iy_jK(x_i,x_j) - 1$ , 显然它的系数会包含其他所有的变量，每一个方程中还是包含 m 个变量，每次迭代需要计算 m 个带有核函数的 m 元方程，方程的个数等于样本量的个数，对于大样本量的问题而言，计算量很大。因此一般不会采用梯度下降法。</p>
+<p>总结一下：梯度下降 (或上升) 法是机器学习优化算法中最简单的，也是最常用的。当问题复杂，梯度下降算法无法求出最优解或者计算量巨大时，我们可以考虑采用坐标下降 (或上升) 法。与梯度下降法相比，坐标上升需要更多的迭代次数来收敛。</p>
+<h1 id="SVM-回归模型（又称为SVR）"><a href="#SVM-回归模型（又称为SVR）" class="headerlink" title="SVM 回归模型（又称为SVR）"></a>SVM 回归模型（又称为SVR）</h1><h2 id="SVR模型的损失函数度量"><a href="#SVR模型的损失函数度量" class="headerlink" title="SVR模型的损失函数度量"></a>SVR模型的损失函数度量</h2><p><strong>回顾下我们SVM分类模型 (SVC)</strong>，传统的分类模型通常直接基于模型输出 $h(x)$ 和真实类别 $y$ 之间的差别来定义损失，每个样本点都对应一个损失，当 $h(x)$ 与 $y$ 的符号相同，距离决策边界越近，损失越大，对于误分类的点，距离决策边界越远，损失越大。而 SVM 分类仅仅关心决策边界附近易混淆或误分类的样本点，即当且仅当样本点与决策边界的距离小于 $\epsilon = 1$ 时，才计算损失，相当于以  $f(x)$ 为中心，构建了一个 宽度为 $2$  的间隔带，间隔带外面正确分类的点都是没有损失的，误分的点和间隔带里面的点是有损失的。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/A1e10mdcKL.png" width="60%"></p>
+<p>下图对比逻辑回归损失函数和SVC损失函数之间的区别：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/i1143dAkd0.png" width="60%"></p>
+<p><strong>再来看SVR,</strong>  传统的回归模型通常直接基于模型输出 $h(x)$ 和真实输出 $y$ 之间的差别来定义损失，当且仅当  $h(x)$ 与 $y$ 完全相同时，损失才为 0。而 SVR 仅仅关系距离拟合模型距离较远的样本点，即当且仅当 $f(x)$ 与 $y$ 直接的差别大于 $\epsilon$ (不敏感损失) 时，才计算损失，这就相当于以   $f(x)$  为中心，构建了一个 宽度为  $2\epsilon$ 的间隔带，间隔带里面的点都是没有损失的，外面的点的是有损失的。</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/ihii5kKDL5.png" width="60%"></p>
+<p>由上节课我们知道 SVC 的损失函数为：</p>
+<script type="math/tex; mode=display">
+{ min} \;\; \frac1m\sum\limits_{i=1}^m max\{0,1-y_i  \hat y_i\} + \frac \lambda 2||w||_2^2</script><p>我们可以得到 SVR 的损失函数为：</p>
+<script type="math/tex; mode=display">
+{ min} \;\; \frac1m\sum\limits_{i=1}^m max\{0, |y_i \hat y_i| - \epsilon\} + \frac \lambda 2||w||_2^2</script><p>下图对比 SVR 损失函数和lr均方差损失函数之间的区别：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/BiLi8Jd4Gc.png" width="100%"></p>
+<p><strong><em>Q8：对比 SVC 和 SVR 的代价函数，有什么区别？ 为什么会有这种区别？</em></strong></p>
+<p>SVC 和 SVR 之间的区别主要体现在 $1-y_i  \hat y_i$ 和  $|y_i \hat y_i| - \epsilon$， 具体说来有三个区别：</p>
+<ul>
+<li>SVR 用的是 $\epsilon$ 而 SVC 用的是 1。即 SVC 采用相对距离（还记得怎么推导的吧？），而 SVR 采用的是绝对距离。这是因为对于最终结果来说，SVC 只需要考虑到决策边界的相对距离，距离的实际大小并没有意义。而 SVR 最后要得到实际值的大小，不能随便缩放。</li>
+<li>SVR 是 $|y_i \hat y_i| $，而 SVC 是 $y_i \hat y_i $， SVR 多了个绝对值，这是因为 SVR 只需要考虑样本点到拟合模型的绝对距离大小，而不需要考虑样本点在拟合模型的哪一侧。SVC 则需要考虑误分类点的情况，对于误分类的点 $y_i  \hat y_i <0$, 对于正确分类的点="" $y_i="" \hat="" y_i=""> 0$， 因此可以理解为 SVC 考虑的是有向距离。</0$,></li>
+<li>SVC 中常数为被除数，SVR 中常数是除数，类似于相反数的关系。这是由于 SVC 中间隔带内的样本点和误分类的点才有损失，即对于 $y_i  \hat y_i <1$ 的样本点，损失不可能为负，所以只可能是="" $1-y_i="" \hat="" y_i$="" 而不是="" $y_i="" y_i="" -="" 1$="" ，即损失为="" $max\{0,1-y_i="" y_i\}$="" 。="" 而svr中间隔带外的样本点才有损失，即对于$|y_i="" y_i|="">\epsilon$ 的样本点，损失不可能为负，所以只可能是$|y_i \hat y_i| - \epsilon$， 即损失为 $ max\{0, |y_i \hat y_i| - \epsilon\} $。</1$></li>
+</ul>
+<h2 id="SVR目标函数的原始形式"><a href="#SVR目标函数的原始形式" class="headerlink" title="SVR目标函数的原始形式"></a>SVR目标函数的原始形式</h2><p>上一节我们已经得到了我们的损失函数的度量，现在可以可以定义我们的目标函数如下：</p>
+<script type="math/tex; mode=display">
+min\;\; \frac{1}{2}||w||_2^2  \;\; s.t \;\; |y_i - w \bullet \phi(x_i ) -b| \leq \epsilon \;\; (i =1,2,...m)</script><p>SVR 中加入松弛变量 $\xi_i $ 之后变为：</p>
+<script type="math/tex; mode=display">
+min\;\; \frac{1}{2}||w||_2^2 + C\sum\limits_{i=1}^{m}(\xi_i^{\lor}+ \xi_i^{\land}) \\
+s.t. \;\;\; -\epsilon - \xi_i^{\lor} \leq y_i - w \bullet \phi(x_i ) -b \leq \epsilon + \xi_i^{\land} \\
+\xi_i^{\lor} \geq 0, \;\; \xi_i^{\land} \geq 0 \;(i = 1,2,..., m)</script><p>用拉格朗日函数将目标优化函数变成无约束的形式：</p>
+<script type="math/tex; mode=display">
+L(w,b,\alpha^{\lor}, \alpha^{\land}, \xi_i^{\lor}, \xi_i^{\land}, \mu^{\lor}, \mu^{\land}) = \frac{1}{2}||w||_2^2 + C\sum\limits_{i=1}^{m}(\xi_i^{\lor}+ \xi_i^{\land}) + \sum\limits_{i=1}^{m}\alpha^{\lor}(-\epsilon - \xi_i^{\lor} -y_i + w \bullet \phi(x_i) + b) \\+ \sum\limits_{i=1}^{m}\alpha^{\land}(y_i - w \bullet \phi(x_i ) - b -\epsilon - \xi_i^{\land}) - \sum\limits_{i=1}^{m}\mu^{\lor}\xi_i^{\lor} - \sum\limits_{i=1}^{m}\mu^{\land}\xi_i^{\land}</script><p>其中 $\mu^{\lor} \geq 0, \mu^{\land} \geq 0, \alpha_i^{\lor} \geq 0, \alpha_i^{\land} \geq 0$，均为拉格朗日系数。</p>
+<p>从上面的公式我们发现，由于绝对值的存在， SVR 中的变量比 SVC 中多了一倍。</p>
+<h2 id="SVR目标函数的对偶形式"><a href="#SVR目标函数的对偶形式" class="headerlink" title="SVR目标函数的对偶形式"></a>SVR目标函数的对偶形式</h2><p>上一节我们讲到了SVM回归模型的目标函数的原始形式,我们的目标是：</p>
+<script type="math/tex; mode=display">
+\underbrace{min}_{w,b,\xi_i^{\lor}, \xi_i^{\land}}\;\underbrace{max}_{\mu^{\lor} \geq 0, \mu^{\land} \geq 0, \alpha_i^{\lor} \geq 0, \alpha_i^{\land} \geq 0}L(w,b,\alpha^{\lor}, \alpha^{\land}, \xi_i^{\lor}, \xi_i^{\land}, \mu^{\lor}, \mu^{\land})</script><p>和SVM分类模型一样，这个优化目标也满足KKT条件，也就是说，我们可以通过拉格朗日对偶将我们的优化问题转化为等价的对偶问题来求解如下：</p>
+<script type="math/tex; mode=display">
+\underbrace{max}_{\mu^{\lor} \geq 0, \mu^{\land} \geq 0, \alpha_i^{\lor} \geq 0, \alpha_i^{\land} \geq 0} \;\underbrace{min}_{w,b,\xi_i^{\lor}, \xi_i^{\land}}\;L(w,b,\alpha^{\lor}, \alpha^{\land}, \xi_i^{\lor}, \xi_i^{\land}, \mu^{\lor}, \mu^{\land})</script><p>我们可以先求优化函数对于 $w,b,\xi_i^{\lor}, \xi_i^{\land}$ 的极小值, 接着再求拉格朗日乘子 $\alpha^{\lor}, \alpha^{\land}, \mu^{\lor}, \mu^{\land}$ 的极大值。</p>
+<p>首先我们来求优化函数对于 $w,b,\xi_i^{\lor}, \xi_i^{\land}$ 的极小值，这个可以通过求偏导数求得：</p>
+<script type="math/tex; mode=display">
+\frac{\partial L}{\partial w} = 0 \;\Rightarrow w = \sum\limits_{i=1}^{m}(\alpha_i^{\land} - \alpha_i^{\lor})\phi(x_i) \\
+\frac{\partial L}{\partial b} = 0 \;\Rightarrow  \sum\limits_{i=1}^{m}(\alpha_i^{\land} - \alpha_i^{\lor}) = 0 \\
+\frac{\partial L}{\partial \xi_i^{\lor}} = 0 \;\Rightarrow C-\alpha^{\lor}-\mu^{\lor} = 0 \\
+\frac{\partial L}{\partial \xi_i^{\land}} = 0 \;\Rightarrow C-\alpha^{\land}-\mu^{\land} = 0</script><p>好了，我们可以把上面4个式子带入 $L(w,b,\alpha^{\lor}, \alpha^{\land}, \xi_i^{\lor}, \xi_i^{\land}, \mu^{\lor}, \mu^{\land})$ 去消去 $w,b,\xi_i^{\lor}, \xi_i^{\land}$ 了。</p>
+<p>最终得到的对偶形式为：</p>
+<script type="math/tex; mode=display">
+\underbrace{ min}_{\alpha^{\lor}, \alpha^{\land}}\; \frac{1}{2}\sum\limits_{i=1,j=1}^{m}(\alpha_i^{\land} - \alpha_i^{\lor})(\alpha_j^{\land} - \alpha_j^{\lor})K_{ij} + \sum\limits_{i=1}^{m}(\epsilon-y_i)\alpha_i^{\land}+ (\epsilon+y_i)\alpha_i^{\lor} \\
+s.t. \; \sum\limits_{i=1}^{m}(\alpha_i^{\land} - \alpha_i^{\lor}) = 0 \\
+0 < \alpha_i^{\lor} < C \; (i =1,2,...m) \\
+0 < \alpha_i^{\land} < C \; (i =1,2,...m)</script><p>用SMO算法来求出对应的 $\alpha^{\lor}, \alpha^{\land}$，进而求出我们的回归模型系数 $w,b$。</p>
+<h1 id="SVM-算法小结"><a href="#SVM-算法小结" class="headerlink" title="SVM 算法小结"></a>SVM 算法小结</h1><p>SVM算法的主要优点有：</p>
+<ul>
+<li>仅仅使用一部分支持向量来做超平面的决策，无需依赖全部数据，有较好的的鲁棒性。</li>
+<li>有大量的核函数可以使用，从而可以很灵活的来解决各种非线性的分类回归问题。</li>
+<li>分类准确率高，泛化能力强。</li>
+</ul>
+<p>SVM算法的主要缺点有：</p>
+<ul>
+<li>则SVM一般用于样本数大于特征维度的场景。</li>
+<li>由于SVM计算量过大，不太适合在样本量非常大时使用。</li>
+<li>非线性问题的核函数的选择没有通用标准，难以选择一个合适的核函数。</li>
+</ul>
+<h1 id="sklearn-SVM库使用小结"><a href="#sklearn-SVM库使用小结" class="headerlink" title="sklearn SVM库使用小结"></a>sklearn SVM库使用小结</h1><p>skearn中 SVM 的算法库分为两类，一类是分类的算法库，包括 SVC， NuSVC，和 LinearSVC 。另一类是回归算法库，包括SVR， NuSVR，和 LinearSVR 。</p>
+<p>对于分类模型，SVC 和 NuSVC 仅仅在于对损失的度量方式不同，而 LinearSVC 是线性分类，对线性不可分的数据不能使用。</p>
+<p>同理，对于回归模型， SVR 和 NuSVR 仅仅在于对损失的度量方式不同。LinearSVR 是线性回归。</p>
+<p>除非知道数据是线性的，我们使用 LinearSVC 或者 LinearSVR。一般使用 SVC 或 SVR。</p>
+<p>如果我们对训练集训练的错误率或支持向量的百分比有要求的时候，可以选择 NuSVC 或 NuSVR 。它们有一个参数来控制这个百分比。</p>
+<p>SVC 参数总结如下：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/E0jAc0afFa.png" width="100%"></p>
+<p>SVR 参数总结如下：</p>
+<p><img src="http://p7l96nurm.bkt.clouddn.com/blog/180427/GmbEHjKAHf.png" width="100%"></p>
+<p>这里对其他的调参要点做以下几点说明：</p>
+<ul>
+<li>训练模型之前对数据进行归一化。</li>
+<li>在特征数非常多的情况下，或者样本数远小于特征数的时候，只需使用线性核即可。</li>
+<li>在选择核函数时，如果线性拟合不好，一般推荐使用默认的高斯核 ‘rbf’。这时我们主要需要对惩罚系数C和核函数参数 $γ$ 进行调参。</li>
+<li>理论上高斯核不会比线性核差，高斯核要花费更多的时间，所以能用线性核解决问题尽量使用线性核。</li>
+</ul>
+<p>参考文献：</p>
+<p>scikit-learn 支持向量机算法库使用小结 <a href="http://www.cnblogs.com/pinard/p/6117515.html" target="_blank" rel="noopener">http://www.cnblogs.com/pinard/p/6117515.html</a></p>
+<p>T. Hastie/ R. Tibshirani / J. H. Friedman  《The Elements of Statistical Learning》</p>
+<p>李航 《统计学习方法》</p>
+<p>周志华 《机器学习》</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">August</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://yoursite.com/7. 攀登传统机器学习的珠峰-SVM (下)/">http://yoursite.com/7. 攀登传统机器学习的珠峰-SVM (下)/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://yoursite.com" target="_blank">人工智能随笔</a>！</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/机器学习/">机器学习</a><a class="post-meta__tags" href="/tags/svm/">svm</a></div><div class="post-qr-code"><div class="post-qr-code-item"><img class="post-qr-code__img" src="https://i.loli.net/2018/04/23/5addf3180d5c3.jpg"><div class="post-qr-code__desc">微信打赏</div></div><div class="post-qr-code-item"><img class="post-qr-code__img" src="http://p7l96nurm.bkt.clouddn.com/blog/180424/Al2II5ld9I.png"><div class="post-qr-code__desc">支付宝打赏</div></div></div><nav id="pagination"><div class="next-post pull-right"><a href="/6. 攀登传统机器学习的珠峰-SVM (中)/"><span>攀登传统机器学习的珠峰-SVM (中)</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="vcomment"></div><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script><script>var notify = 'false' == true ? true : false;
+var verify = 'false' == true ? true : false;
+var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+window.valine = new Valine({
+  el:'#vcomment',
+  notify:notify,
+  verify:verify,
+  appId:'QyE1lY6pTEC99NuVkUDOhztp-gzGzoHsz',
+  appKey:'kDvzLLYR5D1zJwbqAdcuqBra',
+  placeholder:'Just go go',
+  avatar:'mm',
+  guest_info:guest_info,
+  pageSize:'10'
+})</script></div></div><footer><div class="layout" id="footer"><div class="copyright">&copy;2013 - 2018 By August</div><div class="framework-info"><span>驱动 - </span><a href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="busuanzi"><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file-o"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="/js/third-party/anime.min.js"></script><script src="/js/third-party/jquery.min.js"></script><script src="/js/third-party/jquery.fancybox.min.js"></script><script src="/js/third-party/velocity.min.js"></script><script src="/js/third-party/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.5.3"></script><script src="/js/fancybox.js?version=1.5.3"></script><script src="/js/sidebar.js?version=1.5.3"></script><script src="/js/copy.js?version=1.5.3"></script><script src="/js/fireworks.js?version=1.5.3"></script><script src="/js/transition.js?version=1.5.3"></script><script src="/js/scroll.js?version=1.5.3"></script><script src="/js/head.js?version=1.5.3"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script></body></html>
